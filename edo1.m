@@ -1,4 +1,4 @@
-%%% --declaro la edo de orden 2 del ejercicio 1-- %%
+%%% --declaro la edo de orden 2 del ejercicio 1-- %%%
 function dydt = edo1 (t,Xt,A,mp,b,a,rh,p,g,h0,k)
         
         u = double(t >= 0);   % escalón unitario: 0 para t<0, 1 para t>=0
