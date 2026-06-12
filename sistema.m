@@ -10,6 +10,7 @@ b=15;          %%N*s/m
 h0=4;          %%m
 h=10^-3;       %% resolucion
 t= 0:h:10;
+n=length(t);
 
 %% --EJERCICIO 1-- %%
 Xt= Runge_Kutta_o4(@edo1,A,mp,b,a,rh,p,g,h0,k, 2,[0,0], t, h);
@@ -22,7 +23,7 @@ legend('x(t)')
 
 
 %% -- EJERCICIO 2-- %%
-xf_num=Xt(1,end) %% nos dio igual, verificado, desp poner error de que orden nos dio , el rdo verdadero da 0.15039
+xf_num=Xt(1,end) 
 xf_analitico = (p*g*a*A*h0) / (A*k + p*g*a^2);
 error_abs= abs(xf_analitico - xf_num);
 fprintf('\n--- Ejercicio 2 ---\n')
@@ -33,7 +34,7 @@ fprintf('Error absoluto:            %.2e m\n', error_abs)
 
 %% --EJERCICIO 3-- %%
 Xt3=Runge_Kutta_o4(@edo3,A,mp,b,a,rh,p,g,h0,k, 3,[p*g*h0; 0; 0], t, h);
-RTA=[0 -1/k 0; 0 0 -1]*Xt3
+RTA=[0 -1/k 0; 0 0 -1]*Xt3;
 
 figure(2)
 subplot(2,1,1)
@@ -49,4 +50,9 @@ xlabel('Tiempo [s]')
 ylabel('v(t) [m/s]')
 title('Ejercicio 3 - Velocidad traslacional (modelo de estados)')
 legend('v(t)')
+
+%% --EJERCICIO 6--%%
+fprintf('\n--- Ejercicio 6 ---\n')
+[media_x, desvio_x, media_v, desvio_v] = Secante(t, RTA, n, xf_num)
+
 
