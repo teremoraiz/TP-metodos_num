@@ -51,8 +51,49 @@ ylabel('v(t) [m/s]')
 title('Ejercicio 3 - Velocidad traslacional (modelo de estados)')
 legend('v(t)')
 
+%% --EJERCICO 4--%%
+v_num = derivada_numerica(Xt(1,:), h);
+v_ref = Xt(2,:)';% Comparación con RK4 del ejercicio 1
+fprintf('Error máximo = %.4e m/s\n', max(abs(v_num - v_ref)));
+figure(3)
+plot(t, v_ref, '--k', 'LineWidth', 2,   'DisplayName', 'v(t) RK4 (ref)')
+hold on
+plot(t, v_num,  'Color', [1 0.41 0.71], 'LineWidth', 1.2, 'DisplayName', 'v(t) dif. centradas')
+xlabel('Tiempo [s]'); ylabel('v(t) [m/s]')
+title('Ejercicio 4 - Velocidad por derivada numérica')
+legend('Location','best'); grid on
+
+%% --EJERCICIO 5-- %%
+t0 = t(1);
+tF = t(end);
+x_t = Xt(1,:);   % posicion x(t) -> Ejercicio 1
+v_t = RTA(2,:);  % velocidad v(t) -> Ejercicio 3
+% interpolamos los vectores para tener una funcion porque la necesitamos
+% como parametro
+fx_x = Spline_Cubica(t, x_t);
+fv_v = Spline_Cubica(t, v_t);
+%Funciones |x(t)|^2 y |v(t)|^2 evaluadas para pasarlas a tropezoidal y simpson ---
+fx2 = @(tq) Eval_Spline(t, fx_x, tq).^2;
+fv2 = @(tq) Eval_Spline(t, fv_v, tq).^2;
+M = 1000;  % cantidad de intervalos
+Ix_trap = Regla_Trapezoidal_Compuesta(fx2, t0, tF, M);
+Iv_trap = Regla_Trapezoidal_Compuesta(fv2, t0, tF, M);
+Ix_simp = Regla_Simpson_Compuesta(fx2, t0, tF, M);
+Iv_simp = Regla_Simpson_Compuesta(fv2, t0, tF, M);
+%ahora calculamos las potencias
+Px_trap = Ix_trap / (tF - t0);
+Pv_trap = Iv_trap / (tF - t0);
+Px_simp = Ix_simp / (tF - t0);
+Pv_simp = Iv_simp / (tF - t0);
+
+fprintf('\n--- Ejercicio 5 ---\n')
+fprintf('Px (Trapezoidal) = %.6f\n', Px_trap)
+fprintf('Px (Simpson)     = %.6f\n', Px_simp)
+fprintf('Pv (Trapezoidal) = %.6f\n', Pv_trap)
+fprintf('Pv (Simpson)     = %.6f\n', Pv_simp)
+
 %% --EJERCICIO 6--%%
-fprintf('\n--- Ejercicio 6 ---\n')
-[media_x, desvio_x, media_v, desvio_v] = Secante(t, RTA, n, xf_num)
+%fprintf('\n--- Ejercicio 6 ---\n')
+%[media_x, desvio_x, media_v, desvio_v] = Secante(t, RTA, n, xf_num)
 
 
