@@ -70,16 +70,23 @@ x_t = Xt(1,:);   % posicion x(t) -> Ejercicio 1
 v_t = RTA(2,:);  % velocidad v(t) -> Ejercicio 3
 % interpolamos los vectores para tener una funcion porque la necesitamos
 % como parametro
+
 fx_x = Spline_Cubica(t, x_t);
-fv_v = Spline_Cubica(t, v_t);
+fv_v = Spline_Cubica(t, v_t); 
+%nos devuelve los coeficietes del polinomio 
+
 %Funciones |x(t)|^2 y |v(t)|^2 evaluadas para pasarlas a tropezoidal y simpson ---
-fx2 = @(tq) Eval_Spline(t, fx_x, tq).^2;
+fx2 = @(tq) Eval_Spline(t, fx_x, tq).^2; %tq seria el instante de tiempo que quiero evaluar 
 fv2 = @(tq) Eval_Spline(t, fv_v, tq).^2;
+%les pasamos los coeficientes del polinomio y evalua el  polinomio en
+%distintos tq
+
 M = 1000;  % cantidad de intervalos
 Ix_trap = Regla_Trapezoidal_Compuesta(fx2, t0, tF, M);
 Iv_trap = Regla_Trapezoidal_Compuesta(fv2, t0, tF, M);
 Ix_simp = Regla_Simpson_Compuesta(fx2, t0, tF, M);
 Iv_simp = Regla_Simpson_Compuesta(fv2, t0, tF, M);
+
 %ahora calculamos las potencias
 Px_trap = Ix_trap / (tF - t0);
 Pv_trap = Iv_trap / (tF - t0);
@@ -93,7 +100,47 @@ fprintf('Pv (Trapezoidal) = %.6f\n', Pv_trap)
 fprintf('Pv (Simpson)     = %.6f\n', Pv_simp)
 
 %% --EJERCICIO 6--%%
-%fprintf('\n--- Ejercicio 6 ---\n')
-%[media_x, desvio_x, media_v, desvio_v] = Secante(t, RTA, n, xf_num)
+%valor medio y desvio estandar de x(t)
+xt_c= x_t- xf_num;              %centramos en cero
+fx_x6 = Spline_Cubica(t, xt_c ); 
+cota = 1e-6; 
+fx26 = @(tq) Eval_Spline(t, fx_x6, tq);
+Rx= Aprox_RR(fx26,t0, tF, M, cota );  %guardamos las raices de las pos
+N= length(Rx);
 
+for i= 1: N-1
+    Itx(i)= Rx(i+1) - Rx(i);     %guardamos los tiempos consecutivos 
+end
+
+Tce_x= Itx;
+
+T_medio_expx = sum(Tce_x) / length(Tce_x)        %formula de consigna
+T_desvio_expx= sqrt(sum((Tce_x-T_medio_expx).^2)/(length(Tce_x)-1))
+
+
+%valor medio y desvio estandar de v(t)
+fv_v6 = Spline_Cubica(t, v_t ); 
+cota = 1e-6; 
+fv26 = @(tq) Eval_Spline(t, fv_v6, tq);
+Rv= Aprox_RR(fv26,t0, tF, M, cota );  %guardamos las raices de la vel
+N= length(Rv);
+
+for i= 1: N-1
+    Itv(i)= Rv(i+1) - Rv(i);     %guardamos los tiempos consecutivos 
+end
+
+Tce_v= Itv;
+T_medio_expv = sum(Tce_v) / length(Tce_v)        %formula de consigna
+T_desvio_expv= sqrt(sum((Tce_v-T_medio_expv).^2)/(length(Tce_v)-1))
+
+
+%calculo teorico valor medio
+Wn= sqrt(((A*k)+(p*g*(a*a)))/(A*mp));
+eps= (1/(2*Wn))*((b+(a*a)*rh)/mp);
+Wd= Wn*sqrt(1-(eps*eps));
+
+T_medio_teo= pi/Wd 
+errorTx= abs(T_medio_teo - T_medio_expx)
+
+errorTv=abs(T_medio_teo - T_medio_expv)
 
