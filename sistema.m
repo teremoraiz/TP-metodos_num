@@ -9,13 +9,14 @@ g=9.81;        %% m/s2
 b=15;          %%N*s/m
 h0=4;          %%m
 h=10^-3;       %% resolucion
-t= 0:h:10;
-n=length(t);
+T= 0:h:10;
+n=length(T);
 
 %% --EJERCICIO 1-- %%
-Xt= Runge_Kutta_o4(@edo1,A,mp,b,a,rh,p,g,h0,k, 2,[0,0], t, h);
+fprintf('\n--- Ejercicio 1 ---\n')
+Xt= Runge_Kutta_o4(@edo1,A,mp,b,a,rh,p,g,h0,k, 2,[0,0], T, h);
 figure (1)
-plot(t, Xt(1,:), 'Color', [0.8 0.2 0.6], 'LineWidth', 1.5) ;
+plot(T, Xt(1,:), 'Color', [0.8 0.2 0.6], 'LineWidth', 1.5) ;
 xlabel('Tiempo [s]')
 ylabel('x(t) [m]')
 title('Ejercicio 1 - Posición traslacional del sistema')
@@ -23,113 +24,115 @@ legend('x(t)')
 
 
 %% -- EJERCICIO 2-- %%
-xf_num=Xt(1,end) 
-xf_analitico = (p*g*a*A*h0) / (A*k + p*g*a^2);
-error_abs= abs(xf_analitico - xf_num);
 fprintf('\n--- Ejercicio 2 ---\n')
-fprintf('Posición final numérica:   %.6f m\n', xf_num)
+xf_analitico = (p*g*a*A*h0) / (A*k + p*g*a^2);
+error_abs= abs(xf_analitico - Xt(1,end));
+fprintf('Posición final numérica:   %.6f m\n', Xt(1,end))
 fprintf('Posición final analítica:  %.6f m\n', xf_analitico)
 fprintf('Error absoluto:            %.2e m\n', error_abs)
 
 
 %% --EJERCICIO 3-- %%
-Xt3=Runge_Kutta_o4(@edo3,A,mp,b,a,rh,p,g,h0,k, 3,[p*g*h0; 0; 0], t, h);
+fprintf('\n--- Ejercicio 3 ---\n')
+Xt3=Runge_Kutta_o4(@edo3,A,mp,b,a,rh,p,g,h0,k, 3,[p*g*h0; 0; 0], T, h);
 RTA=[0 -1/k 0; 0 0 -1]*Xt3;
 
 figure(2)
 subplot(2,1,1)
-plot(t, RTA(1,:), 'Color', [0.7 0.1 0.9], 'LineWidth', 1.5)
+plot(T, RTA(1,:), 'Color', [0.7 0.1 0.9], 'LineWidth', 1.5)
 xlabel('Tiempo [s]')
 ylabel('x(t) [m]')
 title('Ejercicio 3 - Posición traslacional (modelo de estados)')
 legend('x(t)')
 
 subplot(2,1,2)
-plot(t, RTA(2,:), 'Color', [1.0 0.4 0.8], 'LineWidth', 1.5)
+plot(T, RTA(2,:), 'Color', [1.0 0.4 0.8], 'LineWidth', 1.5)
 xlabel('Tiempo [s]')
 ylabel('v(t) [m/s]')
 title('Ejercicio 3 - Velocidad traslacional (modelo de estados)')
 legend('v(t)')
 
+%% Interpolacion de vectores x y v por spline cubica %%
+x_t = Xt(1,:);   % posicion x(t)
+v_t = Xt(2,:);  % velocidad v(t)
+fx= Spline_Cubica(T, x_t);
+fv= Spline_Cubica(T, v_t);
+fx_ev = @(tq) Eval_Spline(T, fx, tq);
+fv_ev = @(tq) Eval_Spline(T, fv, tq);
+
 %% --EJERCICO 4--%%
-v_num = derivada_numerica(Xt(1,:), h);
-v_ref = Xt(2,:)';% Comparación con RK4 del ejercicio 1
-fprintf('Error máximo = %.4e m/s\n', max(abs(v_num - v_ref)));
+v_num = zeros(n, 1);
+
+% Derivada punto por punto usando Richardson
+for i = 1:n
+    [D, err, relerr, n] = Extrapolacion_Richardson_O2n(fx_ev, T(i), 1e-5, 1e-8);
+    v_num(i) = D(end, end); 
+end
+
+% 3. Comparación con RK4 del ejercicio 1
+fprintf('Error máximo = %.4e m/s\n', max(abs(v_num - (v_t)')));
+
+% 4. Gráficos
 figure(3)
-plot(t, v_ref, '--k', 'LineWidth', 2,   'DisplayName', 'v(t) RK4 (ref)')
+plot(T, v_t, '--k', 'LineWidth', 2,   'DisplayName', 'v(t) RK4 (ref)')
 hold on
-plot(t, v_num,  'Color', [1 0.41 0.71], 'LineWidth', 1.2, 'DisplayName', 'v(t) dif. centradas')
+plot(T, v_num,  'Color', [1 0.41 0.71], 'LineWidth', 1.2, 'DisplayName', 'v(t) dif. centradas')
 xlabel('Tiempo [s]'); ylabel('v(t) [m/s]')
 title('Ejercicio 4 - Velocidad por derivada numérica')
 legend('Location','best'); grid on
 
 %% --EJERCICIO 5-- %%
-t0 = t(1);
-tF = t(end);
-x_t = Xt(1,:);   % posicion x(t) -> Ejercicio 1
-v_t = RTA(2,:);  % velocidad v(t) -> Ejercicio 3
-% interpolamos los vectores para tener una funcion porque la necesitamos
-% como parametro
+fprintf('\n--- Ejercicio 5 ---\n')
+t0 = T(1);
+tF = T(end);
 
-fx_x = Spline_Cubica(t, x_t);
-fv_v = Spline_Cubica(t, v_t); 
-%nos devuelve los coeficietes del polinomio 
-
-%Funciones |x(t)|^2 y |v(t)|^2 evaluadas para pasarlas a tropezoidal y simpson ---
-fx2 = @(tq) Eval_Spline(t, fx_x, tq).^2; %tq seria el instante de tiempo que quiero evaluar 
-fv2 = @(tq) Eval_Spline(t, fv_v, tq).^2;
-%les pasamos los coeficientes del polinomio y evalua el  polinomio en
-%distintos tq
-
+%Funciones |x(t)|^2 y |v(t)|^2 
+fx5 = @(tq) fx_ev(tq).^2; 
+fv5 = @(tq) fv_ev(tq).^2;
 M = 1000;  % cantidad de intervalos
-Ix_trap = Regla_Trapezoidal_Compuesta(fx2, t0, tF, M);
-Iv_trap = Regla_Trapezoidal_Compuesta(fv2, t0, tF, M);
-Ix_simp = Regla_Simpson_Compuesta(fx2, t0, tF, M);
-Iv_simp = Regla_Simpson_Compuesta(fv2, t0, tF, M);
-
-%ahora calculamos las potencias
+%Integrales
+Ix_trap = Regla_Trapezoidal_Compuesta(fx5, t0, tF, M);
+Iv_trap = Regla_Trapezoidal_Compuesta(fv5, t0, tF, M);
+Ix_simp = Regla_Simpson_Compuesta(fx5, t0, tF, M);
+Iv_simp = Regla_Simpson_Compuesta(fv5, t0, tF, M);
+%Potencias
 Px_trap = Ix_trap / (tF - t0);
 Pv_trap = Iv_trap / (tF - t0);
 Px_simp = Ix_simp / (tF - t0);
 Pv_simp = Iv_simp / (tF - t0);
 
-fprintf('\n--- Ejercicio 5 ---\n')
 fprintf('Px (Trapezoidal) = %.6f\n', Px_trap)
 fprintf('Px (Simpson)     = %.6f\n', Px_simp)
 fprintf('Pv (Trapezoidal) = %.6f\n', Pv_trap)
 fprintf('Pv (Simpson)     = %.6f\n', Pv_simp)
 
 %% --EJERCICIO 6--%%
-%valor medio y desvio estandar de x(t)
-xt_c= x_t- xf_num;              %centramos en cero
-fx_x6 = Spline_Cubica(t, xt_c ); 
+%valor medio y desvio estandar calculado con x(t)
+xt_c= x_t - x_t(end);              %centramos en cero
+fx6 = Spline_Cubica(T, xt_c );
+fx6_ev = @(tq) Eval_Spline(T, fx6, tq);
 cota = 1e-6; 
-fx26 = @(tq) Eval_Spline(t, fx_x6, tq);
-Rx= Aprox_RR(fx26,t0, tF, M, cota );  %guardamos las raices de las pos
+
+Rx= Aprox_RR(fx6_ev,t0, tF, M, cota );  %guardamos las raices de las pos
 N= length(Rx);
 
 for i= 1: N-1
-    Itx(i)= Rx(i+1) - Rx(i);     %guardamos los tiempos consecutivos 
+    Tce_x(i)= Rx(i+1) - Rx(i);     %guardamos los tiempos consecutivos 
 end
 
-Tce_x= Itx;
 
-T_medio_expx = sum(Tce_x) / length(Tce_x)        %formula de consigna
+T_medio_expx = sum(Tce_x) / length(Tce_x)        
 T_desvio_expx= sqrt(sum((Tce_x-T_medio_expx).^2)/(length(Tce_x)-1))
 
 
-%valor medio y desvio estandar de v(t)
-fv_v6 = Spline_Cubica(t, v_t ); 
-cota = 1e-6; 
-fv26 = @(tq) Eval_Spline(t, fv_v6, tq);
-Rv= Aprox_RR(fv26,t0, tF, M, cota );  %guardamos las raices de la vel
+%valor medio y desvio estandar calculado con v(t)
+Rv= Aprox_RR(fv_ev,t0, tF, M, cota );  %guardamos las raices de la vel
 N= length(Rv);
 
 for i= 1: N-1
-    Itv(i)= Rv(i+1) - Rv(i);     %guardamos los tiempos consecutivos 
+    Tce_v(i)= Rv(i+1) - Rv(i);     %guardamos los tiempos consecutivos 
 end
 
-Tce_v= Itv;
 T_medio_expv = sum(Tce_v) / length(Tce_v)        %formula de consigna
 T_desvio_expv= sqrt(sum((Tce_v-T_medio_expv).^2)/(length(Tce_v)-1))
 

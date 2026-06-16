@@ -1,4 +1,4 @@
-function v = derivada_numerica(x, h)
+bfunction v = derivada_numerica(x, h)
 % Entradas:
 %   x  : vector de la señal (posición x(t))  
 %   h  : paso de tiempo Δt [s]
