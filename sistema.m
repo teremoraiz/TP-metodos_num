@@ -61,6 +61,7 @@ fx_ev = @(tq) Eval_Spline(T, fx, tq);
 fv_ev = @(tq) Eval_Spline(T, fv, tq);
 
 %% --EJERCICO 4--%%
+fprintf('\n--- Ejercicio 4 ---\n')
 v_num = zeros(n, 1);
 
 % Derivada punto por punto usando Richardson
@@ -107,6 +108,7 @@ fprintf('Pv (Trapezoidal) = %.6f\n', Pv_trap)
 fprintf('Pv (Simpson)     = %.6f\n', Pv_simp)
 
 %% --EJERCICIO 6--%%
+fprintf('\n--- Ejercicio 6 ---\n')
 %valor medio y desvio estandar calculado con x(t)
 xt_c= x_t - x_t(end);              %centramos en cero
 fx6 = Spline_Cubica(T, xt_c );
