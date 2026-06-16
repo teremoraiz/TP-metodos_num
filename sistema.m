@@ -149,3 +149,56 @@ errorTx= abs(T_medio_teo - T_medio_expx)
 
 errorTv=abs(T_medio_teo - T_medio_expv)
 
+%% --EJERCICIO 7-- %%
+m=100;
+x_sub = x_t(1:m:end);
+t_sub = T(1:m:end);
+
+figure(4)
+plot(T, Xt(1,:), 'Color', [0.95 0.75 0.85], 'LineWidth', 1.8); hold on
+plot(t_sub, x_sub, 'Color', [0.75 0.05 0.45], 'LineWidth', 1.3, ...
+     'MarkerFaceColor', [0.75 0.05 0.45])
+xlabel('Tiempo [s]')
+ylabel('x(t) [m]')
+title('Ejercicio 7 - Submuestreo de x(t), M = 100')
+legend('x(t) original (T_{S1}=1ms)', 'x_S[n] submuestreada (T_{S2}=100ms)', 'Location','best')
+
+%% --EJERCICIO 8-- %%
+Xs_int_SC= Spline_Cubica(t_sub, x_sub);
+Xs_int_SC_ev = zeros(size(T)); 
+for i= 1:length(T)
+    Xs_int_SC_ev(i) =Eval_Spline(t_sub, Xs_int_SC, T(i));
+end
+
+figure(5)
+plot(T, Xt(1,:), '--k', 'LineWidth', 2,   'DisplayName', 'x(t) RK4 (ref)')
+hold on
+plot(T, Xs_int_SC_ev,  'Color', [1 0.41 0.71], 'LineWidth', 1.2, 'DisplayName', 'Xs_int_SC')
+xlabel('Tiempo [s]'); ylabel('v(t) [m/s]')
+title('Ejercicio 8 - Posicion submuestrada continua')
+legend('Location','best'); grid on
+
+%% --EJERCICIO 9-- %%
+[A,B,CC]=Ajuste_Lineal_MC((Xt(1,:))',(Xs_int_SC_ev)')
+E_ecm = sqrt( sum((Xt(1,:) - (Xs_int_SC_ev)).^2) ) /length(Xt(1,:));
+
+x_recta = linspace(min(Xt(1,:)), max(Xt(1,:)), length(Xt(1,:)));
+y_recta = A*x_recta + B;
+
+figure(6)
+plot(Xt(1,:) , Xs_int_SC_ev, '.', 'Color', [1 0.7 0.85], 'MarkerSize', 6); hold on
+plot(x_recta , y_recta, 'Color', [0.75 0.05 0.45], 'LineWidth', 2)
+xlabel('x(t)  [m]   (Ejercicio 1)')
+ylabel('x_{SInt\_SC}(t)  [m]   (Ejercicio 8)')
+title('Ejercicio 9 - Correlacion lineal entre x(t) y x_{SInt\_SC}(t)')
+legend('Nube de puntos', 'Recta de ajuste lineal', 'Location','best')
+grid on
+box on
+
+str_info = sprintf('A = %.4f\nB = %.4e\n\\rho = %.6f\nECM = %.4e', A, B, CC, E_ecm);
+xl = xlim; yl = ylim;
+text(xl(1) + 0.05*range(xl), yl(2) - 0.05*range(yl), str_info, ...
+     'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', ...
+     'BackgroundColor', [1 1 1], 'EdgeColor', [0.75 0.05 0.45], ...
+     'FontSize', 9, 'Margin', 6)
+

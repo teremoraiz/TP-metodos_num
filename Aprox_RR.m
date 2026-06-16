@@ -16,8 +16,8 @@ h = (x_max - x_min)/M; %iterador
 for k = 2:M-1 %unica forma de la que puedo tener todos los valores de x_k es
 %si arranca el k en 2
 
-x_km1 = x_min + (k-2)*h; % x_{k-1}
-x_k = x_min + (k-1)*h; % x_k
+    x_km1 = x_min + (k-2)*h; % x_{k-1}
+    x_k = x_min + (k-1)*h; % x_k
 x_kp1 = x_min + k*h; % x_{k+1}
 y_km1 = feval(f, x_km1); %evaluo las funciones en cada coso
 y_k = feval(f, x_k);

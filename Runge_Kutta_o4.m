@@ -18,6 +18,5 @@ function X = Runge_Kutta_o4 (f,A,mp,b,a,rh,p,g,h0,k, m,X0, t, h)
    
 end
   
-
-%%%%%completar lo del escalon
+%%%% poner en el informe
 
